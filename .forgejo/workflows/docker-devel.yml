@@ -1,0 +1,69 @@
+name: Docker (devel)
+
+# Builds the tip of the `devel` branch as a Docker image and pushes it to the
+# Forgejo container registry of this instance:
+#   forge.l3x.in/<owner>/opengist
+#
+# Two tags are produced:
+#   - devel          rolling tag, always the latest tip of `devel`
+#   - sha-<short>    immutable tag for the exact commit
+#
+# Requirements on the runner:
+#   * a runner registered with the `docker` label (default), and
+#   * the host Docker socket made available to job containers, i.e. the
+#     runner's config must list the socket under `valid_volumes`, e.g.
+#       valid_volumes:
+#         - /var/run/docker.sock
+#     The socket is then mounted via `container.options` below.
+
+on:
+  push:
+    branches:
+      - devel
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+env:
+  REGISTRY: forge.l3x.in
+  IMAGE: forge.l3x.in/${{ github.repository_owner }}/opengist
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker-build-devel:
+    runs-on: docker
+    container:
+      image: code.forgejo.org/oci/docker:cli
+      options: -v /var/run/docker.sock:/var/run/docker.sock
+    steps:
+      - name: Install git
+        run: apk add --no-cache git
+
+      - name: Checkout tip of ${{ github.ref_name }}
+        run: |
+          git clone --depth 1 --branch "$GITHUB_REF_NAME" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" .
+          git rev-parse --short HEAD
+
+      - name: Login to Forgejo registry
+        run: |
+          printf '%s\n' "$TOKEN" \
+            | docker login "$REGISTRY" --username "$GITHUB_ACTOR" --password-stdin
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        run: |
+          short_sha=$(printf '%s' "$GITHUB_SHA" | cut -c1-7)
+          docker build \
+            --tag "$IMAGE:devel" \
+            --tag "$IMAGE:sha-$short_sha" \
+            .
+          docker push "$IMAGE:devel"
+          docker push "$IMAGE:sha-$short_sha"
+          echo "Pushed:"
+          echo "  $IMAGE:devel"
+          echo "  $IMAGE:sha-$short_sha"

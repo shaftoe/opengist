@@ -1,0 +1,11 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "alex/.profile is an internal Forgejo reusable workflow, not a GitHub repo, so Renovate cannot resolve it.",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["alex/.profile"],
+      "enabled": false
+    }
+  ]
+}
