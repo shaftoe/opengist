@@ -1,0 +1,52 @@
+name: Docker (devel)
+
+on:
+  push:
+    branches:
+      - devel
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+env:
+  REGISTRY: forge.l3x.in
+  IMAGE: forge.l3x.in/${{ github.repository_owner }}/opengist
+  # Host podman service socket, mounted into the job by the runner:
+  DOCKER_HOST: unix:///var/run/docker.sock
+  CONTAINER_HOST: unix:///var/run/docker.sock
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build-devel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install podman
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq podman
+          podman --version
+
+      - name: Build image (podman, on the host runtime)
+        run: |
+          podman build --tag "$IMAGE:devel" .
+
+      - name: Login to Forgejo registry
+        run: |
+          podman login "$REGISTRY" --username "$OWNER" --password "${{ secrets.REGISTRY_TOKEN }}"
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+
+      - name: Push image
+        run: |
+          podman push "$IMAGE:devel"
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
