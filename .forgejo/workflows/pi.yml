@@ -1,0 +1,12 @@
+name: Pi AI Agent
+
+enable-email-notifications: true
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  pi-agent:
+    uses: alex/.profile/.forgejo/workflows/pi.yml@master
+    secrets: inherit

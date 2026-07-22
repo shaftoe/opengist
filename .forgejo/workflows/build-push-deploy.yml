@@ -1,0 +1,29 @@
+name: Build image, push and deploy
+
+enable-email-notifications: true
+
+on:
+  push:
+    branches:
+      - devel
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    uses: alex/.profile/.forgejo/workflows/build-and-push.yml@master
+    secrets: inherit
+    with:
+      push: true
+      tag: devel
+      extra_build_args: --build-arg OPENGIST_VERSION=devel-$FORGEJO_SHA
+      runner: forgejo-host
+
+  deploy:
+    uses: alex/.profile/.forgejo/workflows/webhook-restart.yml@master
+    needs: build-and-push
+    secrets: inherit
+    with:
+      service: gist
