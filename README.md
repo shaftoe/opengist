@@ -38,7 +38,7 @@ It is similar to [GitHub Gist](https://gist.github.com/), but open-source and co
 Docker [images](https://github.com/thomiceli/opengist/pkgs/container/opengist) are available for each release :
 
 ```shell
-docker pull ghcr.io/thomiceli/opengist:1.13
+docker pull ghcr.io/thomiceli/opengist:1.14
 ```
 
 It can be used in a `docker-compose.yml` file :
@@ -50,7 +50,7 @@ It can be used in a `docker-compose.yml` file :
 ```yml
 services:
   opengist:
-    image: ghcr.io/thomiceli/opengist:1.13
+    image: ghcr.io/thomiceli/opengist:1.14
     container_name: opengist
     restart: unless-stopped
     ports:
@@ -60,16 +60,16 @@ services:
       - "$HOME/.opengist:/opengist"
 ```
 
-You can define which user/group should run the container and own the files by setting the `UID` and `GID` environment variables :
+You can define which user/group should run the container by setting the `user` key (the container is non-root by default, as UID/GID `1000`) :
 
 ```yml
 services:
   opengist:
     # ...
-    environment:
-      UID: 1001
-      GID: 1001
+    user: "1001:1001"
 ```
+
+See the [Docker installation docs](docs/installation/docker.md#running-as-a-non-root-user) for details on file ownership.
 
 ### Via binary
 
@@ -77,9 +77,9 @@ Download the archive for your system from the release page [here](https://github
 
 ```shell
 # example for linux amd64
-wget https://github.com/thomiceli/opengist/releases/download/v1.13.1/opengist1.13.1-linux-amd64.tar.gz
+wget https://github.com/thomiceli/opengist/releases/download/v1.14.0/opengist1.14.0-linux-amd64.tar.gz
 
-tar xzvf opengist1.13.1-linux-amd64.tar.gz
+tar xzvf opengist1.14.0-linux-amd64.tar.gz
 cd opengist
 chmod +x opengist
 ./opengist # with or without `--config config.yml`
