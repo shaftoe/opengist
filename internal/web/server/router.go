@@ -29,6 +29,10 @@ func (s *Server) registerRoutes() {
 	r := NewRouter(s.echo.Group(""))
 
 	{
+		// HEAD "/" returns 200 so that uptime monitors and load balancers that probe
+		// the root path (e.g. `curl -I`) do not see a 404. Unlike GET "/" it does
+		// not require authentication, so unauthenticated health checks succeed.
+		r.HEAD("/", health.Index)
 		r.GET("/", gist.Create, logged)
 		r.POST("/", gist.ProcessCreate, logged)
 		r.POST("/preview", gist.Preview, logged)
